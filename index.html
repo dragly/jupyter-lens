@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Jupyter HTML console</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked-katex-extension/lib/index.umd.js"></script>
+</head>
+<body>
+    <h1>Jupyter HTML console</h1>
+    <div id="messages"></div>
+    <script>
+        // Configure marked to use katex for math rendering
+        marked.use(markedKatex({ throwOnError: false }));
+
+        const ws = new WebSocket('ws://localhost:8765');
+
+        ws.onopen = function() {
+            console.log('WebSocket connection established');
+        };
+
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            const msgType = data.header.msg_type;
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+
+            console.log(msgType);
+
+            if (msgType === 'execute_input') {
+                const code = data.content.code;
+                const markdownContent = code
+                    .split('\n')
+                    .map(line => line.replace(/^#\s*/, ''))
+                    .join('\n')
+                    .trim();
+                messageDiv.innerHTML = marked.parse(markdownContent);
+            } else if (msgType === 'stream') {
+                messageDiv.textContent = `Output: ${data.content.text}`;
+            }
+
+            messagesDiv.appendChild(messageDiv);
+        };
+
+        ws.onclose = function() {
+            console.log('WebSocket connection closed');
+        };
+
+        ws.onerror = function(error) {
+            console.error('WebSocket error:', error);
+        };
+    </script>
+</body>
+</html>
