@@ -5,8 +5,13 @@ import websockets
 from aiohttp import web
 from jupyter_client import KernelManager
 
+KERNEL_CONNECTION_DIR = os.path.expanduser("~/.local/share/jupyter/runtime")
+os.makedirs(KERNEL_CONNECTION_DIR, exist_ok=True)
 
 km = KernelManager()
+
+connection_file = os.path.join(KERNEL_CONNECTION_DIR, f"kernel-{km.kernel_name}.json")
+km.connection_file = connection_file
 
 km.start_kernel()
 kc = km.client()
