@@ -40,6 +40,18 @@ async def websocket_handler(websocket):
             await websocket.send(json.dumps(message, indent=4, sort_keys=True, default=str))
 
         while True:
+            message = websocket.recv()
+            if message:
+                try:
+                    async with asyncio.timeout(0.1):
+                        message = await message
+                        print(f"Received message: {message}")
+                        message = json.loads(message)
+                        if message["type"] == "clear":
+                            all_messages.clear()
+                except asyncio.TimeoutError:
+                    pass
+
             latest_messages = fetch_kernel_messages()
             for message in latest_messages:
                 print(f"Sending message: {message}")

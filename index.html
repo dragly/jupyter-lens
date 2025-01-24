@@ -6,10 +6,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
     <script src="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked-katex-extension/lib/index.umd.js"></script>
-</head>
-<body>
-    <h1>Jupyter HTML console</h1>
-    <div id="messages"></div>
     <script>
         // Configure marked to use katex for math rendering
         marked.use(markedKatex({ throwOnError: false }));
@@ -26,8 +22,6 @@
             const messagesDiv = document.getElementById('messages');
             const messageDiv = document.createElement('div');
 
-            console.log(msgType);
-
             if (msgType === 'execute_input') {
                 const code = data.content.code;
                 const markdownContent = code
@@ -41,6 +35,8 @@
             }
 
             messagesDiv.appendChild(messageDiv);
+
+            window.scrollTo(0, messagesDiv.scrollHeight);
         };
 
         ws.onclose = function() {
@@ -50,6 +46,20 @@
         ws.onerror = function(error) {
             console.error('WebSocket error:', error);
         };
+
+        function clearMessages() {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = '';
+            ws.send(JSON.stringify({ type: 'clear' }));
+        }
     </script>
+</head>
+<body>
+    <h1>Jupyter HTML console</h1>
+    <!-- banner that is sticky to the top with button to clear all messages -->
+    <div style="position: sticky; top: 0; background-color: #f1f1f1; padding: 10px;">
+        <button onclick="clearMessages()">Clear messages</button>
+    </div>
+    <div id="messages"></div>
 </body>
 </html>
