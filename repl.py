@@ -84,20 +84,19 @@ async def start_http_server():
 
 
 async def main():
-    websocket_server_task = asyncio.create_task(start_websocket_server())
-    http_server_task = asyncio.create_task(start_http_server())
-
+    websocket_server_task = None
+    http_server_task = None
     try:
-        while True:
-            fetch_kernel_messages()
-            await asyncio.sleep(0.1)
+        websocket_server_task = asyncio.create_task(start_websocket_server())
+        http_server_task = asyncio.create_task(start_http_server())
+        await asyncio.gather(websocket_server_task, http_server_task)
     except KeyboardInterrupt:
         print("Shutting down...")
     finally:
-        websocket_server_task.cancel()
-        http_server_task.cancel()
-        await websocket_server_task
-        await http_server_task
+        if websocket_server_task:
+            websocket_server_task.cancel()
+        if http_server_task:
+            http_server_task.cancel()
         kc.stop_channels()
         km.shutdown_kernel()
 
